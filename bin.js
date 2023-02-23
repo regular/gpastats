@@ -25,6 +25,26 @@ const conf = require('rc')('gpastats', {
   tz: 'Europe/Berlin'
 })
 
+const routes = (function() {
+  const handlers = {}
+  return {
+    add: (name, handler) =>{
+      handlers[name] = handler
+    },
+    handle: (req, res) =>{
+      console.log('handle', req.url)
+      if (!Object.keys(handlers).includes(req.url)) {
+        console.log('route not found')
+        console.log(req)
+        res.writeHead(404)
+        res.end('Not found')
+        return
+      }
+      handlers[req.url](req, res)
+    }
+  }
+})()
+
 const db = Flume(OffsetLog(__dirname + '/data/flume.log', {
   codec: codec.json,
   offsetCodec: offsetCodecs[48]
@@ -33,14 +53,9 @@ db.use('continuation', Reduce(1, (acc, item) => {
   if (item.type !== '__since') return acc
   return Math.max(acc || 0, item.data.timestamp)
 }))
-db.use('gpa_devices', Reduce(2, (acc, item) => {
-  if (item.type !== 'appInfo') return acc
-  acc = acc || {}
-  const device = item.data.device || 'n/a'
-  acc[device] = (acc[device] || 0) + (item.data.count || 1)
-  return acc
-}))
  
+require('./queries/devices')(db, routes)
+
 db.continuation.get((err, value) => {
   if (err) {
     console.error('Unable to read continuation value:', err.message)
@@ -78,19 +93,10 @@ db.continuation.get((err, value) => {
 import('./https-server.mjs').then(Server=>{
   Server.create({
     domains: conf.domains
-  }, handler, ()=>{
+  }, routes.handle, ()=>{
     console.log('https server is listening')
   })
 
-  function handler(request, response) {
-    db.gpa_devices.get((err, value) => {
-      if (err) return response.end(500, err.message)
-      const entries = Object.entries(value).sort( (a,b)=>b[1]-a[1])
-      const ts = entries.map(([a,b])=>`${a}\t${b}`)
-      const s = ts.join('\n')
-      response.end(s)
-    })
-  }
 })
 
 // -- util

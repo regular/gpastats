@@ -10,6 +10,7 @@
   "license": "AGPL",
   "dependencies": {
     "@small-tech/auto-encrypt": "^4.0.0",
+    "code-fingerprint": "^1.0.1",
     "flumedb": "^2.1.8",
     "flumelog-offset": "^3.4.4",
     "flumeview-reduce": "^1.4.0",
