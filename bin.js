@@ -59,6 +59,8 @@ require('./queries/devices')(db, routes)
 require('./queries/platforms')(db, routes)
 require('./queries/appversions')(db, routes, conf)
 require('./queries/status')(db, routes, conf)
+require('./queries/menus')(db, routes, conf)
+require('./queries/content')(db, routes, conf)
 
 db.continuation.get((err, value) => {
   if (err) {
