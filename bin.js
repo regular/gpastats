@@ -16,6 +16,7 @@ const Reduce = require('flumeview-reduce')
 const Flume = require('flumedb')
 
 const stream = require('../gpafollow')
+const UpdateIds = require('../gpafollow/update-ids')
 
 const conf = require('rc')('gpastats', {
   rqdelay: 10000,
@@ -57,6 +58,7 @@ db.use('continuation', Reduce(1, (acc, item) => {
 require('./queries/devices')(db, routes)
 require('./queries/platforms')(db, routes)
 require('./queries/appversions')(db, routes, conf)
+require('./queries/status')(db, routes, conf)
 
 db.continuation.get((err, value) => {
   if (err) {
@@ -66,8 +68,15 @@ db.continuation.get((err, value) => {
   console.error('continuation value is', formatTimestamp(value))
   conf.continuation = value
 
+  const source = stream(conf)
+  if (source.getIds) {
+    UpdateIds(db, source.getIds)(err =>{
+      if (err) console.error('Error updating suuids:', err.message)
+    })
+  }
+
   pull(
-    stream(conf),
+    source,
     pullLooper,
     bufferUntil( buff=>{
       return buff[buff.length-1].type == '__since'
