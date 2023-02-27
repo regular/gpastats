@@ -55,6 +55,8 @@ db.use('continuation', Reduce(1, (acc, item) => {
 }))
  
 require('./queries/devices')(db, routes)
+require('./queries/platforms')(db, routes)
+require('./queries/appversions')(db, routes, conf)
 
 db.continuation.get((err, value) => {
   if (err) {
