@@ -13,17 +13,15 @@ function FPReduce(f) {
 const viewName = 'gpa_menu'
 
 module.exports = function(db, routes, conf) {
+  const u = require('./util')(conf)
 
   db.use(viewName, FPReduce((acc, item) => {
     if (item.type !== 'menuSection' && item.type !== 'menuSectionItem') return acc
-    acc = acc || {}
-    const {verb, locale, entitySuuid} = item.data
+    const {verb, entitySuuid} = item.data
     if (verb !== 'SELECTED') return acc
 
-    const count = item.data.count || 1
     const key = entitySuuid || 'n/a'
-    acc[key] = (acc[key] || 0) + count
-    return acc
+    return u.add(acc, item.data, key)
   }))
 
   routes.add('/menus', (req, res)=>{
@@ -33,15 +31,19 @@ module.exports = function(db, routes, conf) {
     done((err, value, entities)=>{
       if (err) return res.end(500, err.message)
 
-      const entries = Object.entries(value).sort( (a,b)=>b[1]-a[1])
-      const ts = entries.map(([a,b])=>{
-        const entity = entities[a] || {}
-        const {pname, type} = entity
-        return `${a}\t${b}\t${type}\t${pname}`
-      })
-      const s = ts.join('\n')
+      const key = u.keyFromPath(req.url)
+      value = value[key]
       res.setHeader('Content-Type', 'text/plain; charset=utf-8')
-      res.end(s)
+      res.end(u.format(value, {
+        comment: `Menu Selections (${key})`,
+        fields: ['suuid', 'count', 'type', 'name'],
+        sort: (a,b)=>b[1]-a[1],
+        map: ([id, cnt])=>{
+          const entity = entities[id] || {}
+          const {pname, type} = entity
+          return `${id}\t${cnt}\t${type}\t${pname}`
+        }
+      }))
     })
   })
 }

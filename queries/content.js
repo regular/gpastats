@@ -13,17 +13,15 @@ function FPReduce(f) {
 const viewName = 'gpa_content'
 
 module.exports = function(db, routes, conf) {
+  const u = require('./util')(conf)
 
   db.use(viewName, FPReduce((acc, item) => {
     if (item.type !== 'contentUsage') return acc
-    acc = acc || {}
     const {verb, locale, entitySuuid} = item.data
     if (verb !== 'SELECTED') return acc
     // TODO: makes APPEARED more sense?
-    const count = item.data.count || 1
     const key = entitySuuid || 'n/a'
-    acc[key] = (acc[key] || 0) + count
-    return acc
+    return u.add(acc, item.data, key)
   }))
 
   routes.add('/content', (req, res)=>{
@@ -32,16 +30,19 @@ module.exports = function(db, routes, conf) {
     db.suuids.get(done())
     done((err, value, entities)=>{
       if (err) return res.end(500, err.message)
-
-      const entries = Object.entries(value).sort( (a,b)=>b[1]-a[1])
-      const ts = entries.map(([a,b])=>{
-        const entity = entities[a] || {}
-        const {pname, type} = entity
-        return `${a}\t${b}\t${type}\t${pname}`
-      })
-      const s = ts.join('\n')
+      const key = u.keyFromPath(req.url)
+      value = value[key]
       res.setHeader('Content-Type', 'text/plain; charset=utf-8')
-      res.end(s)
+      res.end(u.format(value, {
+        comment: `Content Selections (${key})`,
+        fields: ['suuid', 'count', 'name'],
+        sort: (a,b)=>b[1]-a[1],
+        map: ([id, cnt])=>{
+          const entity = entities[id] || {}
+          const {pname} = entity
+          return `${id}\t${cnt}\t${pname}`
+        }
+      }))
     })
   })
 }

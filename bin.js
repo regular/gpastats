@@ -34,14 +34,15 @@ const routes = (function() {
     },
     handle: (req, res) =>{
       console.log('handle', req.url)
-      if (!Object.keys(handlers).includes(req.url)) {
+      const key = Object.keys(handlers).find(x => req.url.startsWith(x) )
+      if (!key) {
         console.log('route not found')
         console.log(req)
         res.writeHead(404)
         res.end('Not found')
         return
       }
-      handlers[req.url](req, res)
+      handlers[key](req, res)
     }
   }
 })()
@@ -55,8 +56,8 @@ db.use('continuation', Reduce(1, (acc, item) => {
   return Math.max(acc || 0, item.data.timestamp)
 }))
  
-require('./queries/devices')(db, routes)
-require('./queries/platforms')(db, routes)
+require('./queries/devices')(db, routes, conf)
+require('./queries/platforms')(db, routes, conf)
 require('./queries/appversions')(db, routes, conf)
 require('./queries/status')(db, routes, conf)
 require('./queries/menus')(db, routes, conf)

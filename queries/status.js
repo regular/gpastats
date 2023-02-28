@@ -34,7 +34,7 @@ module.exports = function(db, routes, conf) {
     db[viewName].get((err, acc) => {
       if (err) return res.end(500, err.message)
       const s = [
-        `last updated: ${formatTimestamp(acc.latest_update)}`,
+        `requested until: ${formatTimestamp(acc.latest_update)}`,
         `newest record: ${formatTimestamp(acc.newest_record)}`,
         `${acc.events} events in ${acc.records} records (bins)`
       ]
