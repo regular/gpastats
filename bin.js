@@ -8,6 +8,7 @@ const bufferUntil = require('pull-buffer-until')
 
 const { DateTime } = require('luxon')
 const { inspect } = require('util')
+const { join } = require('path')
 
 const OffsetLog = require('flumelog-offset')
 const offsetCodecs = require('flumelog-offset/frame/offset-codecs')
@@ -19,6 +20,7 @@ const stream = require('../gpafollow')
 const UpdateIds = require('../gpafollow/update-ids')
 
 const conf = require('rc')('gpastats', {
+  data_dir: join(__dirname, 'data'),
   rqdelay: 10000,
   startday: '2021-08-11',
   blacklist: [],
@@ -47,7 +49,7 @@ const routes = (function() {
   }
 })()
 
-const db = Flume(OffsetLog(__dirname + '/data/flume.log', {
+const db = Flume(OffsetLog(join(conf.data_dir, 'flume.log'), {
   codec: codec.json,
   offsetCodec: offsetCodecs[48]
 }))
@@ -106,7 +108,8 @@ db.continuation.get((err, value) => {
 
 import('./https-server.mjs').then(Server=>{
   Server.create({
-    domains: conf.domains
+    domains: conf.domains,
+    settingsPath: conf.data_dir
   }, routes.handle, ()=>{
     console.log('https server is listening')
   })
