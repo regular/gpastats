@@ -38,13 +38,14 @@ module.exports = function(db, routes, conf) {
         `newest record: ${formatTimestamp(acc.newest_record)}`,
         `${acc.events} events in ${acc.records} records (bins)`
       ]
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8')
       res.end(s.join('\n'))
     })
   })
 
   function formatTimestamp(ts) {
     const t = DateTime.fromSeconds(ts/1000).setZone(conf.tz)
-    return t.setLocale('de').toLocaleString(DateTime.DATETIME_MED)
+    return t.setLocale('en').toLocaleString(DateTime.DATETIME_MED)
   }
 }
 

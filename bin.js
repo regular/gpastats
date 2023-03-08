@@ -39,7 +39,7 @@ const routes = (function() {
       const key = Object.keys(handlers).find(x => req.url.startsWith(x) )
       if (!key) {
         console.log('route not found')
-        console.log(req)
+        //console.log(req)
         res.writeHead(404)
         res.end('Not found')
         return
@@ -87,7 +87,7 @@ db.continuation.get((err, value) => {
       return buff[buff.length-1].type == '__since'
     }),
     pull.asyncMap( (items, cb) => {
-      console.log(items)
+      //console.log(items)
       db.append(items, (err, seq) => {
         if (err) return cb(err)
         db.continuation.get((err, value) => {
@@ -101,6 +101,8 @@ db.continuation.get((err, value) => {
       if (err) {
         console.error('-- STREAM ABORT')
         console.error(inspect(err, {depth: 6, colors: true}))
+      } else {
+	console.error('flumedb is in sync with upstream GraphQL source.')
       }
     })
   )
