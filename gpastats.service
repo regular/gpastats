@@ -1,0 +1,18 @@
+[Unit]
+Description=GuidePilot Analytics Stats
+After=network.target
+
+[Service]
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+User=gpa
+Group=gpa
+Environment="nodebin=/usr/local/bin/node"
+Environment="serverbin=/home/regular/dev/barberini/gpastats/bin.js"
+ExecStart=/usr/bin/bash -xc '${nodebin} ${serverbin}'
+
+# Restart every >2 seconds to avoid StartLimitInterval failure
+RestartSec=5
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
