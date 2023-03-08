@@ -25,7 +25,8 @@ const conf = require('rc')('gpastats', {
   startday: '2021-08-11',
   blacklist: [],
   minage: {days: 3},
-  tz: 'Europe/Berlin'
+  tz: 'Europe/Berlin',
+  update_interval: 1000 * 60 * 15
 })
 
 const routes = (function() {
@@ -57,6 +58,7 @@ db.use('continuation', Reduce(1, (acc, item) => {
   if (item.type !== '__since') return acc
   return Math.max(acc || 0, item.data.timestamp)
 }))
+const updateIds = UpdateIds(db)
  
 require('./queries/devices')(db, routes, conf)
 require('./queries/platforms')(db, routes, conf)
@@ -72,14 +74,44 @@ db.continuation.get((err, value) => {
   }
   console.error('continuation value is', formatTimestamp(value))
   conf.continuation = value
+  
 
+  function periodic() {
+    update(db, conf, (err, continuation)=>{
+      conf.continuation = continuation
+      if (err) {
+        console.error('-- STREAM ABORT')
+        console.error(inspect(err, {depth: 6, colors: true}))
+      } else {
+        console.error('flumedb is in sync with upstream GraphQL source.')
+      }
+      setTimeout(periodic, conf.update_interval)
+    })
+  }
+
+  periodic()
+
+})
+
+import('./https-server.mjs').then(Server=>{
+  Server.create({
+    domains: conf.domains,
+    settingsPath: conf.data_dir
+  }, routes.handle, ()=>{
+    console.log('https server is listening')
+  })
+
+})
+
+function update(db, conf, cb) {
   const source = stream(conf)
   if (source.getIds) {
-    UpdateIds(db, source.getIds)(err =>{
+    updateIds(source.getIds, err =>{
       if (err) console.error('Error updating suuids:', err.message)
     })
   }
 
+  let continuation = conf.continuation
   pull(
     source,
     pullLooper,
@@ -93,30 +125,16 @@ db.continuation.get((err, value) => {
         db.continuation.get((err, value) => {
           if (err) return cb(err)
           console.error('new continuation value:', formatTimestamp(value))
+          continuation = value
           cb(null, seq)
         })
       })
     }),
     pull.onEnd(err=>{
-      if (err) {
-        console.error('-- STREAM ABORT')
-        console.error(inspect(err, {depth: 6, colors: true}))
-      } else {
-	console.error('flumedb is in sync with upstream GraphQL source.')
-      }
+      cb(err, continuation)
     })
   )
-})
-
-import('./https-server.mjs').then(Server=>{
-  Server.create({
-    domains: conf.domains,
-    settingsPath: conf.data_dir
-  }, routes.handle, ()=>{
-    console.log('https server is listening')
-  })
-
-})
+}
 
 // -- util
 
