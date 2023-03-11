@@ -14,7 +14,7 @@ test('combine entries based on timestamp', t=>{
       [11],
       [12]
     ]),
-    agg(10),
+    agg(agg.deltaT(10)),
     pull.collect( (err, values)=>{
       t.equal(err, null)
       t.deepEqual(values, [

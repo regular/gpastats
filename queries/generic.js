@@ -15,6 +15,7 @@ const reduce = require('../reduce')
 const viewName = 'gpa_index'
 
 module.exports = function(db, routes, conf) {
+  const {sameYear} = require('../buckets')(conf.tz)
 
   db.use(viewName, FlumeLevel(3, (item, seq) => {
     const {data, type} = item
@@ -53,14 +54,19 @@ module.exports = function(db, routes, conf) {
           seqs: false
         }),
         pull.map(item=>item.slice(1)),
-        aggregate(1000 * 60 * 15, reduce()),
+        pull.map(item=>{
+          // convert timestamp from ms to seconds
+          item[0] = item[0] / 1000
+          return item
+        }),
+        aggregate(aggregate.deltaT(60 * 15), reduce()),
         pull.flatten(),
         
         pull.map(item=>{
           const [timestamp, ...data] = item
           
           const isoTime = DateTime
-            .fromSeconds(timestamp/1000)
+            .fromSeconds(timestamp)
             .setZone(conf.tz)
             .toISO()
           

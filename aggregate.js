@@ -4,7 +4,7 @@
 const pull = require('pull-stream')
 const win = require('pull-window')
 
-module.exports = function(deltaT, reduce) {
+module.exports = function(isSameBucket, reduce) {
   if (!reduce) reduce = defaultReduce
   let current = null
   let next = []
@@ -22,7 +22,7 @@ module.exports = function(deltaT, reduce) {
       const [ts0] = current[0]
       const [ts] = data
       
-      if (ts - ts0 <= deltaT) {
+      if (isSameBucket(ts, ts0)) {
         reduce(current, [data])
       } else {
         next = [data]
@@ -39,4 +39,10 @@ module.exports = function(deltaT, reduce) {
 
 function defaultReduce(acc, newvalues) {  
   newvalues.forEach( v=>acc.push(v) )
+}
+
+module.exports.deltaT = function(deltaT) {
+  return function(ts, ts0) {
+    return ts - ts0 <= deltaT
+  }
 }
