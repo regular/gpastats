@@ -14,7 +14,7 @@ test('creates sums of counts of equal entries', t=>{
   ]
 
   const reduce = Reduce()
-  t.deepEqual(reduce(values), [
+  t.deepEqual(reduce([], values), [
     [ 10, 'foo', 102 ],
     [ 10, 'bar', 10 ]
   ])
