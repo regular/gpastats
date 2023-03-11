@@ -17,20 +17,41 @@ const viewName = 'gpa_index'
 module.exports = function(db, routes, conf) {
   const {sameYear, sameMonth, sameDay, sameHour} = require('../buckets')(conf.tz)
 
-  db.use(viewName, FlumeLevel(4, (item, seq) => {
+  db.use(viewName, FlumeLevel(6, (item, seq) => {
     const {data, type} = item
     if (type == '__since') return []
     let {timestamp, verb, count} = data
+    timestamp /= 1000 // ms to seconds
     count = count || 1
 
+    function e(name, value) {
+      return [name, timestamp, value, count, seq]
+    }
+
     switch(type) {
+      case 'contentUsage':
+        if (verb !== 'SELECTED') return []
+        return [
+          e('content', `${na(data.locale)}:${na(data.entitySuuid)}`)
+        ]
+      case 'menuSection': 
+      case 'menuSectionItem':
+        if (verb !== 'SELECTED') return []
+        return [
+          e('menu', `${na(data.locale)}:${na(data.entitySuuid)}`)
+        ]
+      case 'zone':
+        if (verb !== 'ENTERED') return []
+        return [
+          e('zone', na(data.entitySuuid))
+        ]
       case 'appInfo':
         return [
-          ['platform', timestamp, data.platform || 'n/a', count, seq],
-          ['appVersion', timestamp, data.appVersion || 'n/a', count, seq],
-          ['osVersion', timestamp, data.osVersion || 'n/a', count, seq],
-          ['device', timestamp, data.device || 'n/a', count, seq],
-          ['systemLocale', timestamp, data.systemLocale || 'n/a', count, seq]
+          e('platform', na(data.platform)),
+          e('appVersion', na(data.appVersion)),
+          e('osVersion', na(data.osVersion)),
+          e('device', na(data.device)),
+          e('systemLocale', na(data.systemLocale))
         ]
       default: 
         return []
@@ -70,12 +91,6 @@ module.exports = function(db, routes, conf) {
           seqs: false
         }),
         pull.map(item=>item.slice(1, item.length - 1)),
-        pull.map(item=>{
-          // convert timestamp from ms to seconds
-          item[0] = item[0] / 1000
-          return item
-        }),
-        //aggregate(()=>true, reduce()),
         aggregate(agg(), reduce( (x,y) => x[1] == y[1])),
         //aggregate(aggregate.deltaT(60 * 15), reduce()),
         pull.flatten(),
@@ -97,13 +112,20 @@ module.exports = function(db, routes, conf) {
   })
 }
 
+//-- util
+
+function na(value) {
+  return value || 'n/a'
+}
+
+
 const types = {
   appInfo: {
     index: 'appVersion platform osVersion device systemLocale'.split(' '),
   },
-  session: {
-    filter: ({verb})=> verb == 'STARTED', // TODO
-    index: ['locale'],
+  zone: {
+    filter: ({verb})=> verb == 'ENTERED',
+    props: ['entitySuuid']
   },
   menuSection: {
     filter: ({verb})=> verb == 'SELECTED',
@@ -115,13 +137,14 @@ const types = {
     name: 'menu',
     props: 'locale entitySuuid'.split(' '),
   },
-  zone: {
-    filter: ({verb})=> verb == 'ENTERED',
-    props: ['entitySuuid']
-  },
   contentUsage: {
     filter: ({verb})=> verb == 'SELECTED',
     props: 'locale entitySuuid'.split(' ')
+  },
+
+  session: {
+    filter: ({verb})=> verb == 'STARTED', // TODO
+    index: ['locale'],
   },
   weblink: {
     props: 'verb locale entitySuuid'.split(' ')
