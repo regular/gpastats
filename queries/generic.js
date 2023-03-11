@@ -61,7 +61,7 @@ module.exports = function(db, routes, conf) {
           return item
         }),
         //aggregate(()=>true, reduce()),
-        aggregate(sameYear(), reduce()),
+        aggregate(sameMonth(), reduce( (x,y) => x[1] == y[1])),
         //aggregate(aggregate.deltaT(60 * 15), reduce()),
         pull.flatten(),
         
