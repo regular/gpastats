@@ -31,7 +31,7 @@ module.exports = function(db, routes, conf) {
     done((err, value, entities)=>{
       if (err) return res.end(500, err.message)
       const key = u.keyFromPath(req.url)
-      value = value[key]
+      value = value[key] || []
       res.setHeader('Content-Type', 'text/plain; charset=utf-8')
       res.end(u.format(value, {
         comment: `Content Selections (${key})`,

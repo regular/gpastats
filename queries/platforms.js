@@ -23,7 +23,7 @@ module.exports = function(db, routes, conf) {
     db[viewName].get((err, value) => {
       if (err) return res.end(500, err.message)
       const key = u.keyFromPath(req.url)
-      value = value[key]
+      value = value[key] || []
       res.end(u.format(value, {
         comment: `Device platforms used (${key})`,
         sort: (a,b)=>b[1]-a[1]
