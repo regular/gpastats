@@ -4,7 +4,8 @@
 const pull = require('pull-stream')
 const win = require('pull-window')
 
-module.exports = function(deltaT) {
+module.exports = function(deltaT, reduce) {
+  if (!reduce) reduce = defaultReduce
   let current = null
   let next = []
 
@@ -16,13 +17,13 @@ module.exports = function(deltaT) {
 
     return function add(end, data) {
       if (end) return cb(end, current)
-      if (!current.length) return current.push(data)
+      if (!current.length) return reduce(current, [data])
 
       const [ts0] = current[0]
       const [ts] = data
       
       if (ts - ts0 <= deltaT) {
-        current.push(data)
+        reduce(current, [data])
       } else {
         next = [data]
         cb(null, current)
@@ -34,4 +35,8 @@ module.exports = function(deltaT) {
   function mapf(start, data) {
     return data
   }
+}
+
+function defaultReduce(acc, newvalues) {  
+  newvalues.forEach( v=>acc.push(v) )
 }

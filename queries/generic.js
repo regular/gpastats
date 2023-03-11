@@ -53,8 +53,7 @@ module.exports = function(db, routes, conf) {
           seqs: false
         }),
         pull.map(item=>item.slice(1)),
-        aggregate(1000 * 60 * 15),
-        reduce(),
+        aggregate(1000 * 60 * 15, reduce()),
         pull.flatten(),
         
         pull.map(item=>{

@@ -6,7 +6,7 @@ const deepEqual = require('deep-equal')
 
 module.exports = function(equal) {
   if (!equal) equal = defaultEqual
-  return function(items) {
+  return function(acc, items) {
     return items.reduce( (acc, item)=>{
       const slot = acc.find(x=>equal(x, item))
       if (!slot) {
@@ -21,7 +21,7 @@ module.exports = function(equal) {
       const n = slot.slice(-1)[0] + item.slice(-1)[0]
       slot[slot.length-1] = n
       return acc
-    }, [])
+    }, acc)
   }
 }
 
