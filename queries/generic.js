@@ -15,7 +15,7 @@ const reduce = require('../reduce')
 const viewName = 'gpa_index'
 
 module.exports = function(db, routes, conf) {
-  const {sameYear, sameMonth} = require('../buckets')(conf.tz)
+  const {sameYear, sameMonth, sameDay, sameHour} = require('../buckets')(conf.tz)
 
   db.use(viewName, FlumeLevel(4, (item, seq) => {
     const {data, type} = item
@@ -61,7 +61,7 @@ module.exports = function(db, routes, conf) {
           return item
         }),
         //aggregate(()=>true, reduce()),
-        aggregate(sameMonth(), reduce( (x,y) => x[1] == y[1])),
+        aggregate(sameHour(), reduce( (x,y) => x[1] == y[1])),
         //aggregate(aggregate.deltaT(60 * 15), reduce()),
         pull.flatten(),
         
