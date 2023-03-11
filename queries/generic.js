@@ -40,7 +40,22 @@ module.exports = function(db, routes, conf) {
   routes.add('/generic', (req, res)=>{
     const {pathname, query} = parse(req.url)
     const [_, __, idx] = pathname.split('/')
-    console.error('reading index', idx)
+    console.error('reading index', idx, 'query', query)
+    const params = qs.parse(query)
+    const sum = params.sum
+   
+    const sumf = {
+      byYear:  {  agg: sameYear,
+                  format: dt=> `${dt.year}`},
+      byMonth: {  agg: sameMonth,
+                  format: dt=> `${dt.year}\t${dt.month}`},
+      byDay:   {  agg: sameDay,
+                  format: dt=> `${dt.year}\t${dt.month}\t${dt.day}`},
+      byHour:  {  agg: sameHour,
+                  format: dt=> `${dt.year}\t${dt.month}\t${dt.day}\t${dt.hour}'`}
+    }
+
+    const {agg, format} = (sumf[sum] || sumf.byMonth)
 
     db.suuids.get( (err, suuids) =>{
       if (err) return res.end(err.message)
@@ -61,20 +76,19 @@ module.exports = function(db, routes, conf) {
           return item
         }),
         //aggregate(()=>true, reduce()),
-        aggregate(sameHour(), reduce( (x,y) => x[1] == y[1])),
+        aggregate(agg(), reduce( (x,y) => x[1] == y[1])),
         //aggregate(aggregate.deltaT(60 * 15), reduce()),
         pull.flatten(),
         
         pull.map(item=>{
           const [timestamp, ...data] = item
           
-          const isoTime = DateTime
+          const dt = DateTime
             .fromSeconds(timestamp)
             .setZone(conf.tz)
-            .toISO()
           
-          const d = JSON.stringify(data)
-          return `${isoTime} ${d}\r\n`
+          const d = data.join('\t')
+          return `${format(dt)}\t${d}\r\n`
         })
       
       )
@@ -83,39 +97,33 @@ module.exports = function(db, routes, conf) {
   })
 }
 
-/*
-appInfo
-  appVersion
-  platform
-  osVersion
-  device
-  systemLocale
-  verb
-
-session
-  verb
-  locale
-
-menuSection
-  verb
-  locale
-
-menuSectionItem
-  verb
-  locale
-  entitySuuid
-
-zone
-  verb
-  entitySuuid
-
-contentUsage
-  verb
-  locale
-  entitySuuid
-
-weblink
-  verb
-  locale
-  entitySuuid
-*/
+const types = {
+  appInfo: {
+    index: 'appVersion platform osVersion device systemLocale'.split(' '),
+  },
+  session: {
+    filter: ({verb})=> verb == 'STARTED', // TODO
+    index: ['locale'],
+  },
+  menuSection: {
+    filter: ({verb})=> verb == 'SELECTED',
+    name: 'menu',
+    props: 'locale entitySuuid'.split(' '),
+  },
+  menuSectionItem: {
+    filter: ({verb})=> verb == 'SELECTED',
+    name: 'menu',
+    props: 'locale entitySuuid'.split(' '),
+  },
+  zone: {
+    filter: ({verb})=> verb == 'ENTERED',
+    props: ['entitySuuid']
+  },
+  contentUsage: {
+    filter: ({verb})=> verb == 'SELECTED',
+    props: 'locale entitySuuid'.split(' ')
+  },
+  weblink: {
+    props: 'verb locale entitySuuid'.split(' ')
+  }
+}
