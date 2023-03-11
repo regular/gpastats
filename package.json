@@ -4,7 +4,7 @@
   "description": "Simple statistics server for GuidePilot Analytics",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "tape test/**"
   },
   "author": "Jan Bölsche <jan@lagomorph.de> (http://regular.codes/)",
   "license": "AGPL",
@@ -24,5 +24,8 @@
     "pull-stream-to-stream": "^2.0.0",
     "pull-window": "^2.1.4",
     "rc": "^1.2.8"
+  },
+  "devDependencies": {
+    "tape": "^5.6.3"
   }
 }
