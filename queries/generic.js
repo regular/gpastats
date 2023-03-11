@@ -15,21 +15,22 @@ const reduce = require('../reduce')
 const viewName = 'gpa_index'
 
 module.exports = function(db, routes, conf) {
-  const {sameYear} = require('../buckets')(conf.tz)
+  const {sameYear, sameMonth} = require('../buckets')(conf.tz)
 
-  db.use(viewName, FlumeLevel(3, (item, seq) => {
+  db.use(viewName, FlumeLevel(4, (item, seq) => {
     const {data, type} = item
     if (type == '__since') return []
-    const {timestamp, verb, count} = item.data
+    let {timestamp, verb, count} = data
+    count = count || 1
 
     switch(type) {
       case 'appInfo':
         return [
-          ['platform', timestamp, data.platform, count],
-          ['appVersion', timestamp, data.appVersion, count],
-          ['osVersion', timestamp, data.osVersion, count],
-          ['device', timestamp, data.device, count],
-          ['systemLocale', timestamp, data.systemLocale, count]
+          ['platform', timestamp, data.platform || 'n/a', count, seq],
+          ['appVersion', timestamp, data.appVersion || 'n/a', count, seq],
+          ['osVersion', timestamp, data.osVersion || 'n/a', count, seq],
+          ['device', timestamp, data.device || 'n/a', count, seq],
+          ['systemLocale', timestamp, data.systemLocale || 'n/a', count, seq]
         ]
       default: 
         return []
@@ -53,13 +54,15 @@ module.exports = function(db, routes, conf) {
           values: false,
           seqs: false
         }),
-        pull.map(item=>item.slice(1)),
+        pull.map(item=>item.slice(1, item.length - 1)),
         pull.map(item=>{
           // convert timestamp from ms to seconds
           item[0] = item[0] / 1000
           return item
         }),
-        aggregate(aggregate.deltaT(60 * 15), reduce()),
+        //aggregate(()=>true, reduce()),
+        aggregate(sameYear(), reduce()),
+        //aggregate(aggregate.deltaT(60 * 15), reduce()),
         pull.flatten(),
         
         pull.map(item=>{
