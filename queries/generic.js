@@ -102,7 +102,10 @@ module.exports = function(db, routes, conf) {
             .fromSeconds(timestamp)
             .setZone(conf.tz)
           
-          const d = data.join('\t')
+          let d = data.join('\t')
+          d = d.replace(/[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}/, id=>{
+            return (suuids[id] || {}).pname || id
+          })
           return `${format(dt)}\t${d}\r\n`
         })
       
