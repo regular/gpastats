@@ -15,7 +15,7 @@ const reduce = require('../reduce')
 const viewName = 'gpa_index'
 
 module.exports = function(db, routes, conf) {
-  const {sameYear, sameMonth, sameDay, sameHour} = require('../buckets')(conf.tz)
+  const bucket = require('../buckets')(conf.tz)
 
   db.use(viewName, FlumeLevel(6, (item, seq) => {
     const {data, type} = item
@@ -63,17 +63,39 @@ module.exports = function(db, routes, conf) {
     const [_, __, idx] = pathname.split('/')
     console.error('reading index', idx, 'query', query)
     const params = qs.parse(query)
-    const sum = params.sum
-   
+    let {sum, from, to} = params
+    
+    try {
+      if (from) {
+        from = parseDate(from).toSeconds()
+      } else from = null // needs to be null (used as gte)
+      if (to) {
+        to = parseDate(to).toSeconds()
+      } else to = undefined // needs to be undefined (used as lt)
+    } catch(e) {
+      res.statusCode = 403
+      res.end(e.message)
+      return
+    }
     const sumf = {
-      byYear:  {  agg: sameYear,
+      byYear:  {  agg: bucket.sameYear,
                   format: dt=> `${dt.year}`},
-      byMonth: {  agg: sameMonth,
-                  format: dt=> `${dt.year}\t${dt.month}`},
-      byDay:   {  agg: sameDay,
-                  format: dt=> `${dt.year}\t${dt.month}\t${dt.day}`},
-      byHour:  {  agg: sameHour,
-                  format: dt=> `${dt.year}\t${dt.month}\t${dt.day}\t${dt.hour}'`}
+      byMonth: {  agg: bucket.sameMonth,
+                  format: dt=> `${dt.toISODate().slice(0, 7)}`},
+      byDay:   {  agg: bucket.sameDay,
+                  format: dt=> `${dt.toISODate()}`},
+      byHour:  {  agg: bucket.sameHour,
+                  format: dt=> `${dt.toISODate()}\t${dt.hour}`},
+      /*
+      byMonthAndHour:  {  agg: bucket.sameMonthAndHour,
+                  format: dt=> `${dt.toISODate().slice(0,7)}\t${dt.hour}`}
+      */
+    }
+
+    if (sum && !sumf[sum]) {
+      res.statusCode = 403
+      res.end('Invaid value for "sum": ' + sum)
+      return
     }
 
     const {agg, format} = (sumf[sum] || sumf.byMonth)
@@ -84,8 +106,8 @@ module.exports = function(db, routes, conf) {
 
       const source = pull(
         db[viewName].read({
-          gt: [idx, null],
-          lt: [idx, undefined],
+          gte: [idx, from],
+          lt: [idx, to],
           keys: true,
           values: false,
           seqs: false
@@ -113,6 +135,13 @@ module.exports = function(db, routes, conf) {
       toStream.source(source).pipe(res)
     })
   })
+
+
+  function parseDate(s) {
+    const d = DateTime.fromISO(s).setZone(conf.tz)
+    if (!d.isValid) throw new Error('invalid date')
+    return d
+  }
 }
 
 //-- util

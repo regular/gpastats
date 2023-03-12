@@ -43,13 +43,23 @@ module.exports = function(tz) {
       return true
     })
   }
+
+  function sameMonthAndHour() {
+    return dt_deco( (dt, dt0) => {
+      if (dt.year !== dt0.year) return false
+      if (dt.month !== dt0.month) return false
+      if (dt.hour !== dt0.hour) return false
+      return true
+    })
+  }
     
   return {
     deltaT,
     sameYear,
     sameMonth,
     sameDay,
-    sameHour
+    sameHour,
+    sameMonthAndHour
   }
 
   function dt_deco(f) {
