@@ -58,7 +58,7 @@ module.exports = function(db, routes, conf) {
     }
   }))
 
-  routes.add('/generic', (req, res)=>{
+  routes.add('/v2', (req, res)=>{
     const {pathname, query} = parse(req.url)
     const [_, __, idx] = pathname.split('/')
     console.error('reading index', idx, 'query', query)
