@@ -1,75 +1,52 @@
-//jshint -W033
-//jshint -W018
 //jshint  esversion: 11
+//jshint -W033
 
 const pull = require('pull-stream')
-
 const { DateTime } = require('luxon')
-const { inspect } = require('util')
 const { join } = require('path')
 
 const OffsetLog = require('flumelog-offset')
 const offsetCodecs = require('flumelog-offset/frame/offset-codecs')
 const codec = require('flumecodec')
-const FlumeTransform = require('../../flumeview-level-transform')
-const Flume = require('flumedb')
 
-const ViewDriver = require('../../flumedb-view-driver')
+const Flume = require('flumedb')
+const FlumeTransform = require('flumeview-level-transform')
+const FlumeAggregate = require('flumeview-level-aggregate')
+
+const aggregate = require('./aggregate')
 
 const log = OffsetLog(join(__dirname, '..', 'data', 'flume.log'), {
   codec: codec.json,
   offsetCodec: offsetCodecs[48]
 })
 const db = Flume(log)
-db.use('testing', FlumeTransform(1, transform))
 
-/*
-db.testing.since( x=>{
-  console.log('testing is at', x)
-})
-*/
-log.since( x=>{
-  console.log('log is at', x)
-})
+// ---
 
-const use = ViewDriver(db, log, (sv, opts)=>{
-  console.log(`source opts for ${sv.name}`, opts)
+const parentView = FlumeAggregate(db, 1, transform)
 
-  return pull(
-    db[sv.parent].read(Object.assign({}, opts, {
-      gt: [opts.gt, undefined],
-      live: true,
-      keys: true,
-      values: false,
-      sync: false
-    })),
-    pull.map(x=>{
-      if (x.key.length==1 && x.key[0] == undefined) {
-        return {since: x.seq.since}
-      }
-      return x
-    })
+parentView.use(
+  'platform_by_hour',
+  FlumeTransform(1, 
+    aggregate('platform', 'yyyy-mm-ddThh'.length)
   )
-})
+)
 
-const hourView = use('hourView', FlumeTransform(1, require('./byhour')))
-hourView.parent = 'testing'
-
-hourView.since( x=>{
-  console.log('hourView is at', x)
-})
-
-db.hourView = hourView
-const monthView = use('monthView', FlumeTransform(1, require('./bymonth')))
-monthView.parent = 'hourView'
+parentView.use(
+  'platform_by_year',
+  FlumeTransform(1,
+    aggregate('platform', 'yyyy'.length)
+  )
+)
+db.use('parentView', parentView) 
 
 pull(
-  monthView.read({
+  parentView.platform_by_year.read({
     //since: -1, // don't wait (workaround)
     keys: true,
     seqs: true,
     values: false,
-    live: false,
+    //live: false,
     sync: false
   }),
   pull.log()
@@ -100,7 +77,6 @@ function transform() {
       ]}
       return r
     }),
-    //pull.through(console.log)
   )
 }
 
