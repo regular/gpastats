@@ -19,10 +19,7 @@ module.exports = function(isSameBucket, reduce) {
       if (end) return cb(end, current)
       if (!current.length) return reduce(current, [data])
 
-      const [ts0] = current[0]
-      const [ts] = data
-      
-      if (isSameBucket(ts, ts0)) {
+      if (isSameBucket(data, current[0])) {
         reduce(current, [data])
       } else {
         next = [data]
@@ -42,7 +39,9 @@ function defaultReduce(acc, newvalues) {
 }
 
 module.exports.deltaT = function(deltaT) {
-  return function(ts, ts0) {
+  return function(item, item0) {
+    const [ts0] = item0
+    const [ts] = item
     return ts - ts0 <= deltaT
   }
 }

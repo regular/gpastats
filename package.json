@@ -15,6 +15,8 @@
     "flumedb": "^2.1.8",
     "flumelog-offset": "^3.4.4",
     "flumeview-level": "^4.0.4",
+    "flumeview-level-aggregate": "github:regular/flumeview-level-aggregate",
+    "flumeview-level-transform": "github:regular/flumeview-level-transform",
     "flumeview-reduce": "^1.4.0",
     "luxon": "^3.2.1",
     "multicb": "^1.2.2",

@@ -6,7 +6,9 @@ const {DateTime} = require('luxon')
 module.exports = function(tz) {
 
   function deltaT(deltaT) {
-    return function(ts, ts0) {
+    return function(item, item0) {
+      const [ts0] = item0
+      const [ts] = item
       return ts - ts0 <= deltaT
     }
   }
@@ -64,7 +66,10 @@ module.exports = function(tz) {
 
   function dt_deco(f) {
     let cache = [-1]
-    return function(ts, ts0) {
+    return function(item, item0) {
+      const [ts0] = item0
+      const [ts] = item
+      
       let dt0
       if (ts0 == cache[0]) {
         dt0 = cache[1]

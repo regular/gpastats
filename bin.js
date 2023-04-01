@@ -14,7 +14,9 @@ const OffsetLog = require('flumelog-offset')
 const offsetCodecs = require('flumelog-offset/frame/offset-codecs')
 const codec = require('flumecodec')
 const Reduce = require('flumeview-reduce')
+const FlumeTransform = require('../flumeview-level-transform')
 const Flume = require('flumedb')
+
 
 const stream = require('../gpafollow')
 const UpdateIds = require('../gpafollow/update-ids')
@@ -26,7 +28,8 @@ const conf = require('rc')('gpastats', {
   blacklist: [],
   minage: {days: 3},
   tz: 'Europe/Berlin',
-  update_interval: 1000 * 60 * 15
+  update_interval: 1000 * 60 * 15,
+  allowHTTP: false
 })
 
 const routes = (function() {
@@ -54,6 +57,7 @@ const db = Flume(OffsetLog(join(conf.data_dir, 'flume.log'), {
   codec: codec.json,
   offsetCodec: offsetCodecs[48]
 }))
+//db.use('cascade', FlumeTransform(6, require('./flume-transform')))
 db.use('continuation', Reduce(1, (acc, item) => {
   if (item.type !== '__since') return acc
   return Math.max(acc || 0, item.data.timestamp)
@@ -67,6 +71,7 @@ require('./queries/status')(db, routes, conf)
 require('./queries/menus')(db, routes, conf)
 require('./queries/content')(db, routes, conf)
 require('./queries/generic')(db, routes, conf)
+require('./v3')(db, routes, conf)
 
 db.continuation.get((err, value) => {
   if (err) {
@@ -76,7 +81,6 @@ db.continuation.get((err, value) => {
   console.error('continuation value is', formatTimestamp(value))
   conf.continuation = value
   
-
   function periodic() {
     update(db, conf, (err, continuation)=>{
       conf.continuation = continuation
@@ -94,15 +98,21 @@ db.continuation.get((err, value) => {
 
 })
 
-import('./https-server.mjs').then(Server=>{
-  Server.create({
-    domains: conf.domains,
-    settingsPath: conf.data_dir
-  }, routes.handle, ()=>{
-    console.log('https server is listening')
+if (conf.allowHTTP) {
+  require('http').createServer(routes.handle)
+  .listen(8080, ()=>{
+    console.log('http server is listening')
   })
-
-})
+} else {
+  import('./https-server.mjs').then(Server=>{
+    Server.create({
+      domains: conf.domains,
+      settingsPath: conf.data_dir
+    }, routes.handle, ()=>{
+      console.log('https server is listening')
+    })
+  })
+}
 
 function update(db, conf, cb) {
   const source = stream(conf)
