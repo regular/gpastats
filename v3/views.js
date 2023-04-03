@@ -33,7 +33,7 @@ module.exports = function(db, conf) {
   for (let [bucket, N] of Object.entries(buckets)) {
     for (let field of fields) {
       parentView.use(
-        `${field}_by_${bucket}`,
+        `gpav3_${field}_by_${bucket}`,
         FlumeTransform(1, 
           aggregate(field, N)
         )
@@ -41,7 +41,7 @@ module.exports = function(db, conf) {
     }
   }
 
-  db.use('parentView', parentView) 
+  db.use('gpav3_parentView', parentView) 
 
   return parentView
 

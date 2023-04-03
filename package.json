@@ -13,6 +13,7 @@
     "code-fingerprint": "^1.0.1",
     "deep-equal": "^2.2.0",
     "flumedb": "^2.1.8",
+    "flumelog-array": "^1.2.0",
     "flumelog-offset": "^3.4.4",
     "flumeview-level": "^4.0.4",
     "flumeview-level-aggregate": "github:regular/flumeview-level-aggregate",
@@ -25,7 +26,8 @@
     "pull-stream": "^3.7.0",
     "pull-stream-to-stream": "^2.0.0",
     "pull-window": "^2.1.4",
-    "rc": "^1.2.8"
+    "rc": "^1.2.8",
+    "tmp": "^0.2.1"
   },
   "devDependencies": {
     "tape": "^5.6.3"
