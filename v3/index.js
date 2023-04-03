@@ -18,23 +18,11 @@ module.exports = function(db, routes, conf) {
     const params = qs.parse(query)
     let {sum, from, to} = params
     
-    try {
-      if (from) {
-        parseDate(from)
-      } else from = null // needs to be null (used as gte)
-      if (to) {
-        parseDate(to)
-      } else to = undefined // needs to be undefined (used as lt)
-    } catch(e) {
-      res.statusCode = 403
-      res.end(e.message)
-      return
-    }
     const postfix = {
-      byYear: 'by_year',
-      byMonth: 'by_month',
-      byDay: 'by_day',
-      byHour: 'by_hour'
+      byYear: {pf:'by_year', keyLength:4},
+      byMonth: {pf:'by_month', keyLength:7},
+      byDay: {pf:'by_day', keyLength:10},
+      byHour: {pf:'by_hour', keyLength:13},
     }
 
     if (sum && !postfix[sum]) {
@@ -43,9 +31,23 @@ module.exports = function(db, routes, conf) {
       return
     }
 
-    const pf = postfix[sum] || 'by_month'
-    const viewName = `${idx}_${pf}`
-    console.error('viewName', viewName)
+    const {pf, keyLength} = postfix[sum] || postfix.by_month
+    const viewName = `gpav3_${idx}_${pf}`
+    try {
+      if (from) {
+        parseDate(from)
+        from = fixLength(from, keyLength)
+      } else from = null // needs to be null (used as gte)
+      if (to) {
+        parseDate(to)
+        to = fixLength(to, keyLength)
+      } else to = undefined // needs to be undefined (used as lt)
+    } catch(e) {
+      res.statusCode = 403
+      res.end(e.message)
+      return
+    }
+    console.error('viewName', viewName, 'from', from, 'to', to)
 
     db.suuids.get( (err, suuids) =>{
       if (err) return res.end(err.message)
@@ -84,6 +86,11 @@ module.exports = function(db, routes, conf) {
     if (!d.isValid) throw new Error('invalid date')
     return d
   }
+}
+
+function fixLength(d, l) {
+  const s = '1970-01-01T00'
+  return (d + s.slice(d.length)).slice(0, l)
 }
 
 function makeRows(date, value) {
