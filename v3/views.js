@@ -10,31 +10,31 @@ const FlumeAggregate = require('flumeview-level-aggregate')
 const aggregate = require('./aggregate')
 
 module.exports = function(db, conf) {
-  const parentView = FlumeAggregate(db, 3, transform)
+  const parentView = FlumeAggregate(db, 'parent', transform)
 
   const buckets = {
-    hour: 'yyyy-mm-ddThh'.length,
+    //hour: 'yyyy-mm-ddThh'.length,
     day: 'yyyy-mm-dd'.length,
-    month: 'yyyy-mm'.length,
-    year: 'yyyy'.length
+    //month: 'yyyy-mm'.length,
+    //year: 'yyyy'.length
   }
 
   const fields = [
-    'content', 
-    'menu',
-    'zone',
+    //'content', 
+    //'menu',
+    //'zone',
     'platform',
-    'appVersion',
-    'osVersion',
-    'device',
-    'systemLocale'
+    //'appVersion',
+    //'osVersion',
+    //'device',
+    //'systemLocale'
   ]
 
   for (let [bucket, N] of Object.entries(buckets)) {
     for (let field of fields) {
       parentView.use(
         `gpav3_${field}_by_${bucket}`,
-        FlumeTransform(1, 
+        FlumeTransform(`${field}_by_${bucket}`, 
           aggregate(field, N)
         )
       )

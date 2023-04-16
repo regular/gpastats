@@ -11,9 +11,24 @@ const agg = require('flumeview-level-aggregate/stream')
 // ...
 //
 module.exports = function(TYPE, N) {
-  return function() {
+  return function(meta) {
+    console.log('meta', meta)
+    const c = meta &&  meta.continuation
+    let initial
+    if (c) {
+      initial = Object.assign({}, c, {seq: meta.since, keys: [c.key]})
+      delete initial.type
+      delete initial.key
+    }
+    console.log('agg stream init', initial)
     return pull(
-      agg(fitsBucket, add, 1000)
+      pull.through(x=>{
+        console.log('> agg stream', x)
+      }),
+      agg(fitsBucket, add, {timeout:100, initial, filter}),
+      pull.through(x=>{
+        console.log('< agg stream', x)
+      })
     )
   }
 
@@ -26,30 +41,40 @@ module.exports = function(TYPE, N) {
 
   */
 
-  function fitsBucket(bucket, item) {
+  function filter(item) {
     const {key, seq} = item
     const [seq_, type, time, data, count] = key
-    
-    // if this is not our type, we do not
-    // start a new bucket. Instead, we update its seq 
-    if (type !== TYPE) return true
+    return type == TYPE
+  }
+
+  function fitsBucket(bucket, item) {
+    console.log('fits', item)
+    const {key, seq} = item
+    const [seq_, type, time, data, count] = key
     return bucket.keys[0] == time.slice(0, N)
   }
 
   function add(bucket, item) {
+    console.log('add', item)
     bucket = bucket || {
-      seq: 0,
+      seq: -1,
       keys: [],
       value: {}
     }
+    if (item.seq <= bucket.seq) {
+      // apparently, we get the same record twice on occasion,
+      // even though it is written just once. Is this a bug in the
+      // leveldb stack?
+      console.log('ignore item?', item)
+      //return bucket
+    }
     const {key, seq} = item
     const [seq_, type, time, data, count] = key
-    if (type == TYPE) {
-      if (!bucket.keys.length) bucket.keys = [time.slice(0, N)]
-      const n = (bucket.value[data] || 0) + count
-      bucket.value[data] = n
-    }
+    if (!bucket.keys.length) bucket.keys = [time.slice(0, N)]
+    const n = (bucket.value[data] || 0) + count
+    bucket.value[data] = n
     bucket.seq = seq
+    console.log('new bucket', bucket)
     return bucket
   }
 }
