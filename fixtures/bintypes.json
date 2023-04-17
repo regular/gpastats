@@ -1,0 +1,129 @@
+[
+  {
+    "type": "appInfo",
+    "data": {
+      "appVersion": "3.3.0",
+      "platform": "ANDROID",
+      "osVersion": "31",
+      "device": "redfin",
+      "systemLocale": "en",
+      "verb": null,
+      "interval": 900000,
+      "count": 1,
+      "timestamp": 1628685900000
+    }
+  },
+  {
+    "type": "session",
+    "data": {
+      "verb": null,
+      "interval": 900000,
+      "count": 1,
+      "timestamp": 1628640000000,
+      "locale": ""
+    }
+  },
+  {
+    "type": "menuSection",
+    "data": {
+      "verb": "SELECTED",
+      "interval": 900000,
+      "count": 5,
+      "timestamp": 1663430400000,
+      "locale": "de",
+      "entitySuuid": null,
+      "mainPackageRevision": null,
+      "sessionUuid": null,
+      "installationUuid": null,
+      "customData": null
+    }
+  },
+  {
+    "type": "menuSectionItem",
+    "data": {
+      "verb": "SELECTED",
+      "interval": 900000,
+      "count": 2,
+      "timestamp": 1663430400000,
+      "locale": "en_DE",
+      "entitySuuid": null,
+      "mainPackageRevision": null,
+      "sessionUuid": null,
+      "installationUuid": null,
+      "customData": null
+    }
+  },
+  {
+    "type": "zone",
+    "data": {
+      "verb": "LEFT",
+      "interval": 900000,
+      "count": 19,
+      "timestamp": 1663430400000,
+      "entitySuuid": null,
+      "mainPackageRevision": null,
+      "sessionUuid": null,
+      "installationUuid": null,
+      "customData": null
+    }
+  },
+  {
+    "type": "zone",
+    "data": {
+      "verb": "ENTERED",
+      "interval": 900000,
+      "count": 25,
+      "timestamp": 1663430400000,
+      "entitySuuid": null,
+      "mainPackageRevision": null,
+      "sessionUuid": null,
+      "installationUuid": null,
+      "customData": null
+    }
+  },
+  {
+    "type": "contentUsage",
+    "data": {
+      "verb": "APPEARED",
+      "interval": 900000,
+      "count": 4,
+      "timestamp": 1673107200000,
+      "locale": "de",
+      "entitySuuid": "myid",
+      "mainPackageRevision": "mypackid",
+      "sessionUuid": null,
+      "installationUuid": null,
+      "customData": null
+    }
+  },
+  {
+    "type": "contentUsage",
+    "data": {
+      "verb": "PREVIEW_APPEARED",
+      "interval": 900000,
+      "count": 1,
+      "timestamp": 1673107200000,
+      "locale": "de",
+      "entitySuuid": "foo",
+      "mainPackageRevision": "bar",
+      "sessionUuid": null,
+      "installationUuid": null,
+      "customData": null
+    }
+  },
+  {
+    "type": "contentUsage",
+    "data": {
+      "verb": "SELECTED",
+      "interval": 900000,
+      "count": 4,
+      "timestamp": 1673107200000,
+      "locale": "de",
+      "entitySuuid": "baz",
+      "mainPackageRevision": "barbaz",
+      "sessionUuid": null,
+      "installationUuid": null,
+      "customData": null
+    }
+  }
+]

@@ -11,7 +11,7 @@ const tests = {
   osVersion: ["31"],
   device: ["redfin"],
   systemLocale: ["en"],
-  content: ["de:3c28a01e-0d4b-4c28-b486-01e25b4014a8"],
+  content: ["de:baz"],
   menu: ["de:n/a", "en_DE:n/a"],
   zone: ["n/a"]
 }
