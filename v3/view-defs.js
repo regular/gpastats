@@ -8,18 +8,18 @@ module.exports = {
   systemLocale: appInfo('systemLocale'),
   content: {
     filter: ({type, data})=> type == 'contentUsage' && data.verb == 'SELECTED',
-    extract: ({data}) => `${na(data.locale)}:${na(data.entitySuuid)}`
+    extract: data => `${na(data.locale)}:${na(data.entitySuuid)}`
   }, 
 
   menu: {
     filter: ({type, data}) => (type == 'menuSection' || type == 'menuSectionItem') &&
               data.verb == 'SELECTED',
-    extract: ({data}) => `${na(data.locale)}:${na(data.entitySuuid)}`
+    extract: data => `${na(data.locale)}:${na(data.entitySuuid)}`
   }, 
 
   zone: {
     filter: ({type, data}) => type == 'zone' && data.verb == 'ENTERED',
-    extract: ({data}) => na(data.entitySuuid)
+    extract: data => na(data.entitySuuid)
   }
 }
 
@@ -28,7 +28,9 @@ module.exports = {
 function appInfo(prop) {
   return {
     filter: ({type}) => type == 'appInfo',
-    extract: ({data}) => na(data[prop])
+    extract: data => {
+      na(data[prop])
+    }
   }
 }
 

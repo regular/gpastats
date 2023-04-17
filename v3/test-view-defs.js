@@ -22,6 +22,7 @@ for(let [name, expected] of Object.entries(tests)) {
     pull(
       pull.values(data),
       pull.filter(filter),
+      pull.map(({data})=>data),
       pull.map(extract),
       pull.collect( (err, result)=>{
         t.notOk(err)
