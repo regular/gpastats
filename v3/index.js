@@ -6,10 +6,10 @@ const {DateTime} = require('luxon')
 const {parse} = require('url')
 const qs = require('querystring')
 
-const Views = require('./views')
+const addViews = require('./views')
 
 module.exports = function(db, routes, conf) {
-  const parentView = Views(db, conf)
+  addViews(db, conf)
 
   routes.add('/v3', (req, res)=>{
     const {pathname, query} = parse(req.url)
@@ -54,16 +54,15 @@ module.exports = function(db, routes, conf) {
       res.setHeader('Content-Type', 'text/plain; charset=utf-8')
 
       const source = pull(
-        parentView[viewName].read({
+        db[viewName].read({
           gte: from,
           lt: to,
           keys: true,
-          values: false,
-          seqs: true
+          values: true
         }),
         pull.map(item=>{
           const date = item.key
-          const value = item.seq // TODO
+          const value = item.value
           const rows = makeRows(date, value)
           return rows
         }),
