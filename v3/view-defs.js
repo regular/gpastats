@@ -11,8 +11,9 @@ module.exports = {
     extract: data => `${na(data.locale)}:${na(data.entitySuuid)}`
   }, 
 
-  menu: {
-    filter: ({type, data}) => (type == 'menuSection' || type == 'menuSectionItem') &&
+  menu: { // TODO: including two types breaks timestamp monotonic rise!
+    //filter: ({type, data}) => (type == 'menuSection' || type == 'menuSectionItem') &&
+    filter: ({type, data}) => type == 'menuSectionItem'  &&
               data.verb == 'SELECTED',
     extract: data => `${na(data.locale)}:${na(data.entitySuuid)}`
   }, 
@@ -28,9 +29,7 @@ module.exports = {
 function appInfo(prop) {
   return {
     filter: ({type}) => type == 'appInfo',
-    extract: data => {
-      na(data[prop])
-    }
+    extract: data => na(data[prop])
   }
 }
 

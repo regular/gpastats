@@ -31,7 +31,7 @@ module.exports = function(db, routes, conf) {
       return
     }
 
-    const {pf, keyLength} = postfix[sum] || postfix.by_month
+    const {pf, keyLength} = postfix[sum] || postfix.byMonth
     const viewName = `gpav3_${idx}_${pf}`
     try {
       if (from) {
@@ -53,12 +53,19 @@ module.exports = function(db, routes, conf) {
       if (err) return res.end(err.message)
       res.setHeader('Content-Type', 'text/plain; charset=utf-8')
 
+      /*
+      db[viewName].since( s=>{
+        console.log(s, '/', db.since.value)
+      })
+      */
+      
       const source = pull(
         db[viewName].read({
           gte: from,
           lt: to,
           keys: true,
-          values: true
+          values: true,
+          since: -1
         }),
         pull.map(item=>{
           const date = item.key

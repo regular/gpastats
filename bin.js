@@ -14,7 +14,6 @@ const OffsetLog = require('flumelog-offset')
 const offsetCodecs = require('flumelog-offset/frame/offset-codecs')
 const codec = require('flumecodec')
 const Reduce = require('flumeview-reduce')
-const FlumeTransform = require('../flumeview-level-transform')
 const Flume = require('flumedb')
 
 
@@ -57,7 +56,6 @@ const db = Flume(OffsetLog(join(conf.data_dir, 'flume.log'), {
   codec: codec.json,
   offsetCodec: offsetCodecs[48]
 }))
-//db.use('cascade', FlumeTransform(6, require('./flume-transform')))
 db.use('continuation', Reduce(1, (acc, item) => {
   if (item.type !== '__since') return acc
   return Math.max(acc || 0, item.data.timestamp)

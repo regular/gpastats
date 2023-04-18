@@ -1,4 +1,4 @@
-//jshint esversion: 11, -W033
+//jshint esversion: 11, -W033, -W083
 
 const pull = require('pull-stream')
 const Aggregate = require('flumeview-level-aggregate')
@@ -20,7 +20,13 @@ module.exports = function(db, conf) {
       const {add, fitsBucket} = aggregate(conf, N, extract)
       db.use(
         `gpav3_${name}_by_${bucket}`,
-        Aggregate(1, fitsBucket, add, {filter, timeout: 100})
+        Aggregate(1, fitsBucket, add, {
+          filter,
+          timeout: 100,
+          assert_monotonic: value => {
+            return value.data && value.data.timestamp
+          }
+        })
       )
     }
   }
