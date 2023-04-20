@@ -33,6 +33,11 @@ module.exports = function(db, routes, conf) {
 
     const {pf, keyLength} = postfix[sum] || postfix.byMonth
     const viewName = `gpav3_${idx}_${pf}`
+    if (!db[viewName]) {
+      res.statusCode = 403
+      res.end(`query "${viewName}" not supported`)
+      return
+    }
     try {
       if (from) {
         checkDate(from)

@@ -11,11 +11,13 @@ const toStream = require('pull-stream-to-stream')
 
 const aggregate = require('../aggregate')
 const reduce = require('../reduce')
+const MakeTS = require('../util/make-timestamp')
 
 const viewName = 'gpa_index'
 
 module.exports = function(db, routes, conf) {
   const bucket = require('../buckets')(conf.tz)
+  const makeTS = MakeTS(conf.tz)
 
   db.use(viewName, FlumeLevel(6, (item, seq) => {
     const {data, type} = item
@@ -67,10 +69,10 @@ module.exports = function(db, routes, conf) {
     
     try {
       if (from) {
-        from = parseDate(from).toSeconds()
+        from = makeTS(fixLength(from, 10)).toSeconds()
       } else from = null // needs to be null (used as gte)
       if (to) {
-        to = parseDate(to).toSeconds()
+        to = makeTS(fixLength(to, 10)).toSeconds()
       } else to = undefined // needs to be undefined (used as lt)
     } catch(e) {
       res.statusCode = 403
@@ -139,7 +141,6 @@ module.exports = function(db, routes, conf) {
 
   function parseDate(s) {
     const d = DateTime.fromISO(s).setZone(conf.tz)
-    if (!d.isValid) throw new Error('invalid date')
     return d
   }
 }
@@ -150,6 +151,10 @@ function na(value) {
   return value || 'n/a'
 }
 
+function fixLength(d, l) {
+  const s = '1970-01-01T00'
+  return (d + s.slice(d.length)).slice(0, l)
+}
 
 const types = {
   appInfo: {

@@ -5,13 +5,14 @@ const {DateTime} = require('luxon')
 const test = require('tape')
 
 const conf = {tz: 'Europe/Berlin'}
+const ts = require('../util/make-timestamp')(conf.tz)
 
 test('makes bucket', t=>{
   const {add} = agg(conf, 7, data=>data.platform)
   const b = add(null, {
     type: 'appInfo',
     data: {
-      timestamp: DateTime.fromISO('2023-03-01').toSeconds() * 1000,
+      timestamp: ts('2023-03-01').toSeconds() * 1000,
       count: 2,
       platform: 'IOS'
     }
@@ -28,7 +29,7 @@ test('fitsBucket', t=>{
   const b = add(null, {
     type: 'appInfo',
     data: {
-      timestamp: DateTime.fromISO('2023-03-01').toSeconds() * 1000,
+      timestamp: ts('2023-03-01').toSeconds() * 1000,
       count: 2,
       platform: 'IOS'
     }
@@ -40,7 +41,7 @@ test('fitsBucket', t=>{
   t.ok(fitsBucket(b, {
     type: 'appInfo',
     data: {
-      timestamp: DateTime.fromISO('2023-03-06').toSeconds() * 1000,
+      timestamp: ts('2023-03-06').toSeconds() * 1000,
       count: 5,
       platform: 'IOS'
     }
@@ -48,7 +49,7 @@ test('fitsBucket', t=>{
   t.notOk(fitsBucket(b, {
     type: 'appInfo',
     data: {
-      timestamp: DateTime.fromISO('2023-04-01').toSeconds() * 1000,
+      timestamp: ts('2023-04-01').toSeconds() * 1000,
       count: 5,
       platform: 'IOS'
     }
@@ -61,7 +62,7 @@ test('add to bucket', t=>{
   let b = add(null, {
     type: 'appInfo',
     data: {
-      timestamp: DateTime.fromISO('2023-03-01').toSeconds() * 1000,
+      timestamp: ts('2023-03-01').toSeconds() * 1000,
       count: 2,
       platform: 'IOS'
     }
@@ -70,7 +71,7 @@ test('add to bucket', t=>{
   b = add(b, {
     type: 'appInfo',
     data: {
-      timestamp: DateTime.fromISO('2023-03-06').toSeconds() * 1000,
+      timestamp: ts('2023-03-06').toSeconds() * 1000,
       count: 5,
       platform: 'IOS'
     }
@@ -78,7 +79,7 @@ test('add to bucket', t=>{
   b = add(b, {
     type: 'appInfo',
     data: {
-      timestamp: DateTime.fromISO('2023-03-29').toSeconds() * 1000,
+      timestamp: ts('2023-03-29').toSeconds() * 1000,
       count: 4,
       platform: 'ANDROID'
     }
