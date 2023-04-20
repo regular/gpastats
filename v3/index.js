@@ -35,11 +35,11 @@ module.exports = function(db, routes, conf) {
     const viewName = `gpav3_${idx}_${pf}`
     try {
       if (from) {
-        parseDate(from)
+        checkDate(from)
         from = fixLength(from, keyLength)
       } else from = null // needs to be null (used as gte)
       if (to) {
-        parseDate(to)
+        checkDate(to)
         to = fixLength(to, keyLength)
       } else to = undefined // needs to be undefined (used as lt)
     } catch(e) {
@@ -87,10 +87,9 @@ module.exports = function(db, routes, conf) {
   })
 
 
-  function parseDate(s) {
-    const d = DateTime.fromISO(s).setZone(conf.tz)
+  function checkDate(s) {
+    const d = DateTime.fromISO(s)
     if (!d.isValid) throw new Error('invalid date')
-    return d
   }
 }
 
