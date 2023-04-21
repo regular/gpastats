@@ -13,23 +13,32 @@ module.exports = function(conf, N, extract, opts) {
     const ts = data.timestamp / 1000
     const dt = DateTime.fromSeconds(ts).setZone(conf.tz)
     let k = dt.toISO().slice(0, N)
-    if (opts.weekday) k = k + `@${dt.weekday}${dt.weekdayShort}`
-    return k
+    const subkey = opts.weekday ? `${dt.weekday}-${dt.weekdayShort}` : undefined
+    return {key: k, subkey}
   }
 
   function fitsBucket(bucket, {type, data}) {
-    return key(data) == bucket.key
+    return key(data).key == bucket.key
   }
 
   function add(bucket, {data}) {
     bucket = bucket || {
-      key: key(data),
+      key: key(data).key,
       value: {}
     }
     const p = extract(data)
     const count = data.count || 1
-    const n = (bucket.value[p] || 0) + count
-    bucket.value[p] = n
+
+    let v = bucket.value
+    if (opts.weekday) {
+      const sk = key(data).subkey
+      let sub = v[sk]
+      if (!sub) sub = v[sk] = {}
+      v = sub
+    }
+
+    const n = (v[p] || 0) + count
+    v[p] = n
     return bucket
   }
 }

@@ -113,7 +113,7 @@ test('zone by month-weekday', t=>{
       pull.collect( (err, items)=>{
         t.notOk(err, 'read view')
         t.deepEqual(items, [
-          { key: '2023-04@5Fri', value: { 'hall': 3 } },
+          { key: '2023-04', value: {'5-Fri': { 'hall': 3 } } },
         ])
         t.end()
       })

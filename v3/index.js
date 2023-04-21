@@ -23,8 +23,8 @@ module.exports = function(db, routes, conf) {
       byMonth: {pf:'by_month', keyLength:7},
       byDay: {pf:'by_day', keyLength:10},
       byHour: {pf:'by_hour', keyLength:13},
-      byMonthWeekday: {pf:'by_month-weekday', keyLength:7},
-      byYearWeekday: {pf:'by_year-weekday', keyLength:4},
+      byMonthWeekday: {pf:'by_month-weekday', keyLength:7, nested: 1},
+      byYearWeekday: {pf:'by_year-weekday', keyLength:4, nested: 1},
     }
 
     if (sum && !postfix[sum]) {
@@ -33,7 +33,7 @@ module.exports = function(db, routes, conf) {
       return
     }
 
-    const {pf, keyLength} = postfix[sum] || postfix.byMonth
+    const {pf, keyLength, nested} = postfix[sum] || postfix.byMonth
     const viewName = `gpav3_${idx}_${pf}`
     if (!db[viewName]) {
       res.statusCode = 403
@@ -77,7 +77,7 @@ module.exports = function(db, routes, conf) {
         pull.map(item=>{
           const date = item.key
           const value = item.value
-          const rows = makeRows(date, value)
+          const rows = makeRows(date, value, nested)
           return rows
         }),
         pull.flatten(),
@@ -105,7 +105,14 @@ function fixLength(d, l) {
   return (d + s.slice(d.length)).slice(0, l)
 }
 
-function makeRows(date, value) {
+function makeRows(date, value, nested) {
+  if (nested) {
+    let result = []
+    for (const key of Object.keys(value).sort()) {
+      result = result.concat(makeRows(`${date}@${key}`, value[key], nested - 1))
+    }
+    return result
+  }
   const entries = Object.entries(value).sort( (a,b)=>{
     return b[1] - a[1]
   })

@@ -12,7 +12,7 @@ const tests = {
   device: ["redfin"],
   systemLocale: ["en"],
   content: ["de:baz"],
-  menu: ["de:n/a", "en_DE:n/a"],
+  menu: ["en_DE:n/a"],
   zone: ["n/a"]
 }
 

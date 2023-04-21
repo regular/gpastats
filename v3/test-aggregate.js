@@ -112,8 +112,8 @@ test('opts.weekday', t=>{
   t.ok(fitsBucket(b, val2))
   b = add(b, val2)
   t.deepEqual(b, {
-    key: '2023-04@5Fri',
-    value: { IOS: 2, ANDROID: 4 } 
+    key: '2023-04',
+    value: {'5-Fri': { IOS: 2, ANDROID: 4 }} 
   })
   t.end()
 })

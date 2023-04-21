@@ -21,10 +21,18 @@ module.exports = function(db, conf) {
     }
   }
   const {filter, extract} = viewDefs.zone
-  addView('gpav3_zone_by_month-weekday', 7, filter, extract, {weekday: true}) 
-  addView('gpav3_zone_by_year-weekday', 4, filter, extract, {weekday: true}) 
+  addView('gpav3_zone_by_month-weekday', 7, filter, extract, {
+    weekday: true,
+    version: 2
+  }) 
+  addView('gpav3_zone_by_year-weekday', 4, filter, extract, {
+    weekday: true,
+    version: 2
+  }) 
 
   function addView(name, N, filter, extract, opts) {
+    opts = opts || {}
+    const version = opts.version || 1
     const {add, fitsBucket} = aggregate(conf, N, extract, opts)
     db.use(
       name,
