@@ -1,7 +1,8 @@
 //jshint  esversion: 11, -W033, -W018
 const { DateTime } = require('luxon')
 
-module.exports = function(conf, N, extract) {
+module.exports = function(conf, N, extract, opts) {
+  opts = opts || {}
 
   return {
     fitsBucket,
@@ -11,7 +12,9 @@ module.exports = function(conf, N, extract) {
   function key(data) {
     const ts = data.timestamp / 1000
     const dt = DateTime.fromSeconds(ts).setZone(conf.tz)
-    return dt.toISO().slice(0, N)
+    let k = dt.toISO().slice(0, N)
+    if (opts.weekday) k = k + `@${dt.weekday}${dt.weekdayShort}`
+    return k
   }
 
   function fitsBucket(bucket, {type, data}) {

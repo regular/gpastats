@@ -90,3 +90,30 @@ test('add to bucket', t=>{
   })
   t.end()
 })
+
+test('opts.weekday', t=>{
+  const {add, fitsBucket} = agg(conf, 7, data=>data.platform, {weekday: true})
+  let b = add(null, {
+    type: 'appInfo',
+    data: {
+      timestamp: ts('2023-04-21').toSeconds() * 1000,
+      count: 2,
+      platform: 'IOS'
+    }
+  })
+  const val2 =  {
+    type: 'appInfo',
+    data: {
+      timestamp: ts('2023-04-28').toSeconds() * 1000,
+      count: 4,
+      platform: 'ANDROID'
+    }
+  }
+  t.ok(fitsBucket(b, val2))
+  b = add(b, val2)
+  t.deepEqual(b, {
+    key: '2023-04@5Fri',
+    value: { IOS: 2, ANDROID: 4 } 
+  })
+  t.end()
+})

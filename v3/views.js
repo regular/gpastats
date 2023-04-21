@@ -17,17 +17,24 @@ module.exports = function(db, conf) {
   for (let [bucket, N] of Object.entries(buckets)) {
     for (let name of Object.keys(viewDefs)) {
       const {filter, extract} = viewDefs[name]
-      const {add, fitsBucket} = aggregate(conf, N, extract)
-      db.use(
-        `gpav3_${name}_by_${bucket}`,
-        Aggregate(1, fitsBucket, add, {
-          filter,
-          timeout: 100,
-          assert_monotonic: value => {
-            return value.data && value.data.timestamp
-          }
-        })
-      )
+      addView(`gpav3_${name}_by_${bucket}`, N, filter, extract)
     }
   }
+  const {filter, extract} = viewDefs.zone
+  addView('gpav3_zone_by_month-weekday', 7, filter, extract, {weekday: true}) 
+
+  function addView(name, N, filter, extract, opts) {
+    const {add, fitsBucket} = aggregate(conf, N, extract, opts)
+    db.use(
+      name,
+      Aggregate(1, fitsBucket, add, {
+        filter,
+        timeout: 100,
+        assert_monotonic: value => {
+          return value.data && value.data.timestamp
+        }
+      })
+    )
+  }
+
 }
