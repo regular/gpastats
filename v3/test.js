@@ -8,20 +8,21 @@ const {join} = require('path')
 const {DateTime} = require('luxon')
 const test = require('tape')
 
-const views = require('./views')
+const addViews = require('./views')
 
 const tz = 'Europe/Berlin'
 const ts = require('../util/make-timestamp')(tz)
+
 
 test('menu items', t=>{
   const log = Log()
   log.filename = join(tmp.dirSync({unsafeCleanup: true}).name, 'xxx')
   let db = Flume(log)
-  views(db, {tz})
+  addViews(db, {tz})
    
   db.append([
     {
-      type: 'menuSection',
+      type: 'menuSectionItem',
       data: {
         verb: 'SELECTED',
         locale: 'de',
@@ -30,7 +31,7 @@ test('menu items', t=>{
         timestamp: ts('2023-01-01T12:00').toSeconds() * 1000
       }
     }, {
-      type: 'menuSection',
+      type: 'menuSectionItem',
       data: {
         verb: 'SELECTED',
         locale: 'es',
@@ -39,7 +40,7 @@ test('menu items', t=>{
         timestamp: ts('2023-12-31T23:59').toSeconds() * 1000
       }
     }, {
-      type: 'menuSection',
+      type: 'menuSectionItem',
       data: {
         verb: 'SELECTED',
         locale: 'en',
@@ -53,13 +54,14 @@ test('menu items', t=>{
     t.notOk(err, 'write events to db')
     const v = db.gpav3_menu_by_year
     v.since(x=>{
-      console.log(x)
+      console.log('v.since',x)
     })
     pull(
       v.read({
         keys: true,
         values: true
       }),
+      pull.through(console.log),
       pull.collect( (err, items)=>{
         t.notOk(err, 'read menu_by_year')
         t.deepEqual(items, [
