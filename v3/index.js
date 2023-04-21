@@ -23,6 +23,8 @@ module.exports = function(db, routes, conf) {
       byMonth: {pf:'by_month', keyLength:7},
       byDay: {pf:'by_day', keyLength:10},
       byHour: {pf:'by_hour', keyLength:13},
+      byMonthWeekday: {pf:'by_month-weekday', keyLength:7},
+      byYearWeekday: {pf:'by_year-weekday', keyLength:4},
     }
 
     if (sum && !postfix[sum]) {
