@@ -31,15 +31,17 @@ const conf = require('rc')('gpastats', {
   allowHTTP: false
 })
 
-const routes = (function() {
+const routes = (function(secret) {
   const handlers = {}
+  const prefix = secret ? '/' + secret : ''
+  console.log('Router has secret:', prefix.substr(0, 3))
   return {
     add: (name, handler) =>{
       handlers[name] = handler
     },
     handle: (req, res) =>{
       console.log('handle', req.url)
-      const key = Object.keys(handlers).find(x => req.url.startsWith(x) )
+      const key = Object.keys(handlers).find(x => req.url.startsWith(prefix + x) )
       if (!key) {
         console.log('route not found')
         //console.log(req)
@@ -47,10 +49,11 @@ const routes = (function() {
         res.end('Not found')
         return
       }
+      req.url = req.url.replace(prefix,'')
       handlers[key](req, res)
     }
   }
-})()
+})(conf['secret-prefix'])
 
 const db = Flume(OffsetLog(join(conf.data_dir, 'flume.log'), {
   codec: codec.json,
